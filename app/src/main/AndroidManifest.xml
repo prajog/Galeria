@@ -12,9 +12,17 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.Galeria"
         tools:targetApi="31">
+
+
         <activity
             android:name=".PhotoActivity"
-            android:exported="false" />
+            android:parentActivityName=".MainActivity" >
+            <!--linhas 17,20 e 21 indicam que o usuario sera levado para MainActivity quando clicar no botao voltar de PhotoActivity-->
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value=".MainActivity"/>
+        </activity>
+
         <activity
             android:name=".MainActivity"
             android:exported="true">
