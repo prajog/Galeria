@@ -1,9 +1,12 @@
 package beretta.prajo.galeria;
 
+import android.content.Intent;
+import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
+import android.widget.ImageView;
 
 import androidx.activity.EdgeToEdge;
 import androidx.annotation.NonNull;
@@ -16,10 +19,11 @@ import androidx.core.view.WindowInsetsCompat;
 
 public class PhotoActivity extends AppCompatActivity {
 
+    String photoPath;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        EdgeToEdge.enable(this);
         setContentView(R.layout.activity_photo);
 
         Toolbar toolbar = findViewById(R.id.tbPhoto);
@@ -29,11 +33,15 @@ public class PhotoActivity extends AppCompatActivity {
         ActionBar actionBar = getSupportActionBar();
         actionBar.setDisplayHomeAsUpEnabled(true);
 
-        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
-            Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
-            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
-            return insets;
-        });
+        //obtem o caminho enviado via Intent
+        Intent i = getIntent();
+        photoPath = i.getStringExtra("photo_path");
+
+        //carrega a foto em um Bitmap
+        Bitmap bitmap = Util.getBitmap(photoPath);
+        ImageView imPhoto = findViewById(R.id.imPhoto);
+        //seta o Bitmap no ImageView
+        imPhoto.setImageBitmap(bitmap);
     }
 
     //metodo que cria um inflador de menu, para crias as opcoes de menu definidas no arquivo de menu passado como parametro e as adiciona no menu da Activity
@@ -56,4 +64,5 @@ public class PhotoActivity extends AppCompatActivity {
                 return super.onOptionsItemSelected(item);
         }
     }
+
 }
