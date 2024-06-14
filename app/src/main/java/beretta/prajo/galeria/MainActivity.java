@@ -35,6 +35,7 @@ public class MainActivity extends AppCompatActivity {
 
     static int RESULT_TAKE_PICTURE = 1;
 
+    //guarda somente o local do arquivo de foto que esta sendo manipulado no momento
     String currentPhotoPath;
 
     List<String> photos = new ArrayList<>();
@@ -106,7 +107,9 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void dispatchTakePictureIntent(){
+        //cria um arquivo vazio dentro da pasta Pictures
         File f = null;
+        //se o arquivo nao puder ser criado  sera exibida uma mensagem de erro para o usuario
         try {
             f = createImageFile();
         } catch (IOException e){
@@ -114,18 +117,26 @@ public class MainActivity extends AppCompatActivity {
             return;
         }
 
+        //salva o local do arquivo criado no atributo
         currentPhotoPath = f.getAbsolutePath();
 
         if(f != null) {
+            //gera um endereco URI para o arquivo de foto
             Uri fUri = FileProvider.getUriForFile(MainActivity.this, "beretta.prajo.galeria.fileprovider", f);
+            //cria uma intent para disparar a app de camera
             Intent i = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+            //o URI eh passado para a app de camera via intent
             i.putExtra(MediaStore.EXTRA_OUTPUT, fUri);
+            //inicia a app de camera, que fica esperando pelo resultado (a foto)
             startActivityForResult(i, RESULT_TAKE_PICTURE);
         }
     }
 
+    //metodo que cria o arquivo que vai guardar a imagem
     private File createImageFile() throws IOException {
+        //pega a data e hora para criar um nome diferente para cada imagem
         String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
+        //cria o nome da foto
         String imageFileName = "JPEG_" + timeStamp;
         File storageDir = getExternalFilesDir(Environment.DIRECTORY_PICTURES);
         File f = File.createTempFile(imageFileName, ".jpg", storageDir);
@@ -136,10 +147,14 @@ public class MainActivity extends AppCompatActivity {
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         if (requestCode == RESULT_TAKE_PICTURE){
+            //se a foto tiver sido tirada
             if(resultCode == Activity.RESULT_OK){
+                //o local da foto eh adicionado na lista de fotos
                 photos.add(currentPhotoPath);
+                //avisa o MainAdapter de que uma nova foto foi inserida na lista e que o recycleview deve ser atualizado tambem
                 mainAdapter.notifyItemInserted(photos.size()-1);
             } else {
+                //se a foto nao tiver sido tirada o arquivo criado sera excluido
                 File f = new File(currentPhotoPath);
                 f.delete();
             }
