@@ -1,8 +1,12 @@
 package beretta.prajo.galeria;
 
+import android.Manifest;
 import android.app.Activity;
+import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.provider.MediaStore;
@@ -15,8 +19,10 @@ import androidx.activity.EdgeToEdge;
 import androidx.activity.result.ActivityResult;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
+import androidx.core.app.ActivityCompat;
 import androidx.core.content.FileProvider;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
@@ -34,6 +40,7 @@ import java.util.List;
 public class MainActivity extends AppCompatActivity {
 
     static int RESULT_TAKE_PICTURE = 1;
+    static int RESULT_REQUEST_PERMISSION = 2;
 
     //guarda somente o local do arquivo de foto que esta sendo manipulado no momento
     String currentPhotoPath;
@@ -75,6 +82,10 @@ public class MainActivity extends AppCompatActivity {
         GridLayoutManager gridLayoutManager = new GridLayoutManager(MainActivity.this, numberOfColumns);
         rvGallery.setLayoutManager(gridLayoutManager);
 
+        List<String> permissions = new ArrayList<>();
+        permissions.add(Manifest.permission.CAMERA);
+        checkForPermissions(permissions);
+
     }
 
     //metodo que cria um inflador de menu, para crias as opcoes de menu definidas no arquivo de menu passado como parametro e as adiciona no menu da Activity
@@ -89,13 +100,11 @@ public class MainActivity extends AppCompatActivity {
     //metodo chamado toda vez q um item da ToolBar for selecionado. Se o icone da camera for clicado, vai excutar o codigo que dispara a camera do celular
     @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
-        switch (item.getItemId()){
-            case R.id.opCamera:
-                dispatchTakePictureIntent();
-                return true;
-            default:
-                return super.onOptionsItemSelected(item);
+        if (item.getItemId() == R.id.opCamera) {
+            dispatchTakePictureIntent();
+            return true;
         }
+        return super.onOptionsItemSelected(item);
     }
 
     //recebe como parametro a foto que devera ser aberta por PhotoActivity
@@ -157,6 +166,69 @@ public class MainActivity extends AppCompatActivity {
                 //se a foto nao tiver sido tirada o arquivo criado sera excluido
                 File f = new File(currentPhotoPath);
                 f.delete();
+            }
+        }
+    }
+
+    //recebe como entrada uma lista de permissoes
+    //metodo que exibe o dialog ao usuario pedindo confirmacao de uso do recurso
+    private void checkForPermissions(List<String> permissions){
+        List<String> permissionsNotGranted = new ArrayList<>();
+
+        //verifica cada permissao
+        for(String permission : permissions) {
+            //se o usuario nao tiver confirmado ainda uma permissao ...
+            if( !hasPermission(permission)){
+                // ... a permissao eh posta em uma lista de permissoes nao confirmadas
+                permissionsNotGranted.add(permission);
+            }
+        }
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M){
+            if(permissionsNotGranted.size() > 0){
+                //requisita ao usuario as permissoes ainda nao concedidas quando esse metodo for chamado
+                requestPermissions(permissionsNotGranted.toArray(new String[permissionsNotGranted.size()]), RESULT_REQUEST_PERMISSION);
+            }
+        }
+    }
+
+    //verifica se uma permissao foi concedida ou nao
+    private boolean hasPermission(String permission){
+        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.M){
+            return ActivityCompat.checkSelfPermission(MainActivity.this, permission) == PackageManager.PERMISSION_GRANTED;
+        }
+        return false;
+    }
+
+    //metodo chamado apos o usuario conceder ou nao as permissoes requisitadas
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        final List<String> permissionsRejected = new ArrayList<>();
+        //verifica se a permissao foi concedida ou nao
+        if(requestCode == RESULT_REQUEST_PERMISSION){
+            for(String permission : permissions){
+                if(!hasPermission(permission)){
+                    permissionsRejected.add(permission);
+                }
+            }
+        }
+
+        //verifica se alguma permissao essencial para o funcionamento da app, e exibe uma mensagem informando ao usuario que aquela permissao eh realmente necessaria
+        if(permissionsRejected.size() > 0){
+            if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.M){
+                //verifica se a aplicacao ainda tem permissao para pedir permissao
+                if(shouldShowRequestPermissionRationale(permissionsRejected.get(0))){
+                    //cria uma caixa de dialogo
+                    new AlertDialog.Builder(MainActivity.this).setMessage("Para usar essa app é preciso conceder essas permissões").setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            //requisita novamente as permissoes
+                            requestPermissions(permissionsRejected.toArray(new String[permissionsRejected.size()]), RESULT_REQUEST_PERMISSION);
+                        }
+                    }).create().show();
+
+                }
             }
         }
     }

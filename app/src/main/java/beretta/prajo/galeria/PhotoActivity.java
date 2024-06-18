@@ -2,6 +2,7 @@ package beretta.prajo.galeria;
 
 import android.content.Intent;
 import android.graphics.Bitmap;
+import android.net.Uri;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -13,9 +14,12 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
+import androidx.core.content.FileProvider;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
+
+import java.io.File;
 
 public class PhotoActivity extends AppCompatActivity {
 
@@ -56,13 +60,25 @@ public class PhotoActivity extends AppCompatActivity {
     //metodo chamado toda vez q um item da ToolBar for selecionado. Se o icone de compartilhar for clicado, vai excutar o codigo que compartilha a foto
     @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
-        switch(item.getItemId()){
-            case R.id.opShare:
-                sharePhoto();
-                return true;
-            default:
-                return super.onOptionsItemSelected(item);
+        if (item.getItemId() == R.id.opShare) {
+            sharePhoto();
+            return true;
         }
+        return super.onOptionsItemSelected(item);
+    }
+
+    //metodo para compartilhar a foto
+    void sharePhoto(){
+        //gera um URI para a foto que pertence a nossa app, para poder ser acessada por outras apps
+        Uri photoUri = FileProvider.getUriForFile(PhotoActivity.this, "beretta.prajo.galeria.fileprovider", new File(photoPath));
+        //cria um intent implicito que indica que queremos enviar algo para qualquer app que seja capaz de aceitar o envio
+        Intent i = new Intent(Intent.ACTION_SEND);
+        //determina qual arquivo estamos tentando compartilhar
+        i.putExtra(Intent.EXTRA_STREAM, photoUri);
+        //diz que tipo de dado o arquivo eh
+        i.setType("image/jpeg");
+        //executa a intent
+        startActivity(i);
     }
 
 }
