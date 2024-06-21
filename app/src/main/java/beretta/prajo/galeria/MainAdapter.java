@@ -1,6 +1,7 @@
 package beretta.prajo.galeria;
 
 import android.graphics.Bitmap;
+import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
@@ -22,7 +23,12 @@ public class MainAdapter extends RecyclerView.Adapter {
     @NonNull
     @Override
     public RecyclerView.ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        return null;
+        //inflador de layout que le o arquivo xml do item
+        LayoutInflater inflater = LayoutInflater.from(mainActivity);
+        //o inflador cria os elementos de interface referentes a um item e os guarda dentro de um objeto do tipo View
+        View v = inflater.inflate(R.layout.list_item, parent, false);
+        //o objeto do tipo View eh guardado dentro de um objeto do tipo MyViewHolder, que eh retornado pela funcao
+        return new MyViewHolder(v);
     }
 
     // preenche o ImageView com a foto correspondente
@@ -49,6 +55,6 @@ public class MainAdapter extends RecyclerView.Adapter {
 
     @Override
     public int getItemCount() {
-        return 0;
+            return photos.size();
     }
 }
